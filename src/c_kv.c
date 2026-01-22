@@ -1,33 +1,119 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include"c_kv.h"
+#include<string.h>
+#include "c_kv.h"
+#include "utils.h"
 
-struct CKV{
+struct KVSNode
+{
+    char* key;
+    char* value;
+    KVSNode* next;
+};
+
+struct KVS{
+    KVSNode* head;
     int count;
 };
 
-CKV* kvs_create(){
-    CKV* newKVS=(CKV*)malloc(sizeof(CKV));
+KVS* kvs_create(){
+    KVS* newKVS=(KVS*)malloc(sizeof(KVS));
     if (newKVS==NULL)
     {
         return NULL;
     }
     newKVS->count=0;
+    newKVS->head=NULL;
     return newKVS;
 }
-void kvs_destroy(CKV* kvs){
+void kvs_destroy(KVS* kvs){
+    if (kvs==NULL)
+    {
+        return;
+    }
+    KVSNode* current=kvs->head;
+    while (current!=NULL)
+    {
+        kvs->head=kvs->head->next;
+        free(current->key);
+        free(current->value);
+        free(current);
+        current=kvs->head;
+    }
     free(kvs);
 }
 
-SYS_STATUS kvs_put(CKV* kvs,const char* key,const char* value){
-    printf("输入了key，在kvs中储存了了key对应的value\n");
+SYS_STATUS kvs_put(KVS* kvs,const char* key,const char* value){
+    if (kvs==NULL)
+    {
+        return SS_INVALID_PARAM;
+    }
+    KVSNode* newNode=(KVSNode*)malloc(sizeof(KVSNode));
+    if (newNode==NULL)
+    {
+        return SS_OUT_OF_MEMORY;
+    }
+    char* newKey=str_copy(key);
+    if (newKey==NULL)
+    {
+        free(newNode);
+        return SS_OUT_OF_MEMORY;
+    }
+    char* newValue=str_copy(value);
+    if (newValue==NULL)
+    {
+        free(newNode);
+        free(newKey);
+        return SS_OUT_OF_MEMORY;
+    }
+    newNode->key=newKey;
+    newNode->value=newValue;
+    newNode->next=kvs->head;
+    kvs->head=newNode;
+    kvs->count++;
     return SS_SUCCESS;
 }
-char* kvs_get(CKV* kvs,const char* key){
-    printf("输入了key，在kvs中没找到key对应的value\n");
+char* kvs_get(KVS* kvs,const char* key){
+    if (kvs==NULL)
+    {
+        return NULL;
+    }
+    KVSNode* p=kvs->head;
+    while (p!=NULL)
+    {
+        if (strcmp(p->key,key)==0)
+        {
+            return p->value;
+        }
+        p=p->next;
+    }
     return NULL;
 };
-SYS_STATUS kvs_delete(CKV* kvs,const char* key){
-    printf("输入了key，格式错误\n");
-    return SS_INVALID_PARAM;
+SYS_STATUS kvs_delete(KVS* kvs,const char* key){
+    if (kvs==NULL||key==NULL)
+    {
+        return SS_INVALID_PARAM;
+    }
+    KVSNode* pre=kvs->head;
+    KVSNode* current=kvs->head;
+    while (current!=NULL)
+    {
+        if (strcmp(current->key,key)==0)
+        {
+            if (current==kvs->head)
+            {
+                kvs->head=kvs->head->next;
+            }else{
+                pre->next=current->next;
+            }
+            free(current->key);
+            free(current->value);
+            free(current);
+            kvs->count--;
+            return SS_SUCCESS;
+        }
+        pre=current;
+        current=current->next; 
+    }
+    return SS_KEY_NOT_FOUND;
 }

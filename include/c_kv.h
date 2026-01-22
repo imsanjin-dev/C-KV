@@ -3,13 +3,14 @@
 
 #include"common.h"
 
-typedef struct CKV CKV;
+typedef struct KVS KVS;
+typedef struct KVSNode KVSNode;
 
-CKV* kvs_create();
-void kvs_destroy(CKV* kvs);
+KVS* kvs_create();
+void kvs_destroy(KVS* kvs);
 
-SYS_STATUS kvs_put(CKV* kvs,const char* key,const char* value);
-char* kvs_get(CKV* kvs,const char* key);
-SYS_STATUS kvs_delete(CKV* kvs,const char* key);
+SYS_STATUS kvs_put(KVS* kvs,const char* key,const char* value);
+char* kvs_get(KVS* kvs,const char* key);
+SYS_STATUS kvs_delete(KVS* kvs,const char* key);
 
 #endif
