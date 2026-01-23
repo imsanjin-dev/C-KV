@@ -38,6 +38,7 @@ void test_delete(){
     CHECK_NUM(kvs_delete(db,"key2"),SS_SUCCESS);
     CHECK_STR(kvs_get(db,"key2"),NULL);
     CHECK_NUM(kvs_get_count(db),0);
+    kvs_destroy(db);
 }
 
 void test_hash_func(){
