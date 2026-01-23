@@ -40,10 +40,22 @@ void test_delete(){
     CHECK_NUM(kvs_get_count(db),0);
 }
 
+void test_hash_func(){
+    char* key1="test_key";
+    unsigned long h1=hash(key1);
+    unsigned long h2=hash("test_key");
+    CHECK_LONG_ISSAME1(h1,h2);
+    unsigned long h3=hash("abc");
+    unsigned long h4=hash("acb");
+    CHECK_LONG_ISSAME2(h3,h4);
+    printf("\n%lu,%lu,%lu,%lu\n",h1,h2,h3,h4);
+}
+
 int main() {
     test_database_init();
     test_put_get();
     test_delete();
+    test_hash_func();
     PRINT_REPORT();
     return tests_failed; // 如果 fails 是 0，返回 0 (成功)
 }

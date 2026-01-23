@@ -3,6 +3,8 @@
 
 #include"common.h"
 
+#define TABLE_SIZE 128
+
 typedef struct KVS KVS;
 typedef struct KVSNode KVSNode;
 

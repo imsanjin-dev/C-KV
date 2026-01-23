@@ -15,3 +15,13 @@ char* str_copy(const char* s){
     strcpy(sCopy,s);
     return sCopy;
 }
+
+unsigned long hash(const char* str){
+    unsigned long hash=5381;
+    while (*str!='\0')
+    {
+        char c=*str++;
+        hash=hash*33+(unsigned long)c;
+    }
+    return hash;
+}
