@@ -60,6 +60,7 @@ void kvs_destroy(KVS* kvs){
     free(kvs);
 }
 
+//尾插法
 SYS_STATUS kvs_put(KVS* kvs, const char* key, const char* value) {
     if (kvs == NULL || key == NULL || value == NULL) {
         return SS_INVALID_PARAM;
