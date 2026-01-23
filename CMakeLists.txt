@@ -1,35 +1,55 @@
-# ==========================================
-# C-KV-Store 构建脚本
-# ==========================================
+# =============================================================================
+# C-Super-KV 构建脚本 (Day 4: 单元测试集成版)
+# =============================================================================
 
-# 1. 指定 CMake 最低版本 (3.10 是 Ubuntu 18.04 默认版本，兼容性好)
 cmake_minimum_required(VERSION 3.10)
-
-# 2. 定义项目名称
 project(C-Super-KV)
 
-# 3. 设置 C 语言标准
-# 使用 C99 标准 (允许 // 注释，允许在 for 循环里定义变量)
+# 1. 基础设置
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# 4. 开启调试模式 & 编译器警告
-# Debug 模式会包含调试符号，方便后续用 GDB/VSCode 调试
-# -Wall -Wextra: 打开所有警告，强迫你写出规范的代码
-set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
+# 开启调试符号 (-g) 和严格警告 (-Wall -Wextra)
+# 工业界标准：不要忽略任何 Warning
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra")
 
-# 5. 指定头文件搜索路径
-# 这样你在代码里写 #include "kv.h" 时，编译器知道去 include/ 文件夹找
+# 指定头文件路径
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/tests) # 让测试代码能找到 framework.h
 
-# 6. 自动发现源文件
-# 扫描 src 目录下所有的 .c 文件，并将列表赋值给变量 SOURCES
-file(GLOB SOURCES "src/*.c")
+# =============================================================================
+# 2. 核心代码分离 (关键步骤)
+# =============================================================================
+# 这里列出所有的 .c 文件，但 **绝对不要** 包含 main.c
+# 也不要包含 test_kv.c
+set(CORE_SRC 
+    src/c_kv.c
+    src/utils.c
+)
 
-# 7. 生成可执行文件
-# 最终生成的可执行文件名字叫 c-kv
-add_executable(c-kv ${SOURCES})
+# =============================================================================
+# 3. 构建主程序 (Product)
+# =============================================================================
+# 只有主程序才需要 src/main.c
+add_executable(c-kv src/main.c ${CORE_SRC})
 
-# 打印一条消息，让你知道 CMake 跑起来了
-message(STATUS "Build setup ready for sources: ${SOURCES}")
+# =============================================================================
+# 4. 构建测试程序 (Unit Tests)
+# =============================================================================
+enable_testing() # 开启 CTest 功能
+
+# 测试程序 = 测试入口(test_kv.c) + 核心逻辑(CORE_SRC)
+add_executable(run_tests tests/test_kv.c ${CORE_SRC})
+
+# 注册到 CTest
+# 这样你就可以在 build 目录下运行 `ctest` 命令了
+add_test(NAME CoreKVTest COMMAND run_tests)
+
+# =============================================================================
+# 5. 辅助信息
+# =============================================================================
+message(STATUS "-------------------------------------------------")
+message(STATUS "Build Configured:")
+message(STATUS "   App  Target: c-kv")
+message(STATUS "   Test Target: run_tests")
+message(STATUS "-------------------------------------------------")

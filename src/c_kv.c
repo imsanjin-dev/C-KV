@@ -16,6 +16,10 @@ struct KVS{
     int count;
 };
 
+int kvs_get_count(KVS* kvs){
+    return kvs->count;
+}
+
 KVS* kvs_create(){
     KVS* newKVS=(KVS*)malloc(sizeof(KVS));
     if (newKVS==NULL)
@@ -43,34 +47,50 @@ void kvs_destroy(KVS* kvs){
     free(kvs);
 }
 
-SYS_STATUS kvs_put(KVS* kvs,const char* key,const char* value){
-    if (kvs==NULL)
-    {
+SYS_STATUS kvs_put(KVS* kvs, const char* key, const char* value) {
+    if (kvs == NULL || key == NULL || value == NULL) {
         return SS_INVALID_PARAM;
     }
-    KVSNode* newNode=(KVSNode*)malloc(sizeof(KVSNode));
-    if (newNode==NULL)
-    {
+
+    char* newValue = str_copy(value);
+    if (newValue == NULL) {
         return SS_OUT_OF_MEMORY;
     }
-    char* newKey=str_copy(key);
-    if (newKey==NULL)
-    {
+
+    KVSNode* p = kvs->head;
+    while (p != NULL) {
+        if (strcmp(p->key, key) == 0) {
+
+
+            free(p->value); 
+
+            p->value = newValue; 
+
+            return SS_SUCCESS; 
+        }
+        p = p->next;
+    }
+
+    KVSNode* newNode = (KVSNode*)malloc(sizeof(KVSNode));
+    if (newNode == NULL) {
+        free(newValue);
+        return SS_OUT_OF_MEMORY;
+    }
+
+    char* newKey = str_copy(key);
+    if (newKey == NULL) {
         free(newNode);
+        free(newValue); 
         return SS_OUT_OF_MEMORY;
     }
-    char* newValue=str_copy(value);
-    if (newValue==NULL)
-    {
-        free(newNode);
-        free(newKey);
-        return SS_OUT_OF_MEMORY;
-    }
-    newNode->key=newKey;
-    newNode->value=newValue;
-    newNode->next=kvs->head;
-    kvs->head=newNode;
+
+    
+    newNode->key = newKey;
+    newNode->value = newValue;
+    newNode->next = kvs->head; 
+    kvs->head = newNode;       
     kvs->count++;
+
     return SS_SUCCESS;
 }
 char* kvs_get(KVS* kvs,const char* key){

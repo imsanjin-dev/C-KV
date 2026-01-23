@@ -6,6 +6,8 @@
 typedef struct KVS KVS;
 typedef struct KVSNode KVSNode;
 
+int kvs_get_count(KVS* kvs);
+
 KVS* kvs_create();
 void kvs_destroy(KVS* kvs);
 
