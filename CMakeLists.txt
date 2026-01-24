@@ -40,6 +40,7 @@ enable_testing() # 开启 CTest 功能
 
 # 测试程序 = 测试入口(test_kv.c) + 核心逻辑(CORE_SRC)
 add_executable(run_tests tests/test_kv.c ${CORE_SRC})
+add_executable(benchmark_tests tests/test_benchmark.c ${CORE_SRC})
 
 # 注册到 CTest
 # 这样你就可以在 build 目录下运行 `ctest` 命令了

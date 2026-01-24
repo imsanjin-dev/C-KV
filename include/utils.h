@@ -9,4 +9,6 @@ unsigned long hash(const char* str);
 
 void print_banner();
 
+void testKey_create(char* testKey,int n);
+
 #endif
