@@ -10,7 +10,7 @@ void test_database_init(){
         KVS* db=kvs_create(0);
         if (db!=NULL)
         {
-            CHECK_NUM(kvs_get_count(db),0);
+            CHECK_NUM(db->itemCount,0);
         }else{
             tests_failed++;
             printf(COLOR_RED"[ERROR] %s:%d: DataBase is NULL!\n"COLOR_RESET, __FILE__, __LINE__); \
@@ -21,7 +21,7 @@ void test_database_init(){
 void test_put_get(){
     KVS* db=kvs_create(0);
     CHECK_NUM(kvs_put(db,"key1","value1"),SS_SUCCESS);
-    CHECK_NUM(kvs_get_count(db),1);
+    CHECK_NUM(db->itemCount,1);
     char* val = kvs_get(db, "key1");
     CHECK_STR(val,"value1");
     kvs_destroy(db);
@@ -33,14 +33,14 @@ void test_delete(){
     CHECK_NUM(kvs_put(db,"key2","value2"),SS_SUCCESS);
     CHECK_NUM(kvs_delete(db,"key1"),SS_SUCCESS);
     CHECK_STR(kvs_get(db,"key1"),NULL);
-    CHECK_NUM(kvs_get_count(db),1);
+    CHECK_NUM(db->itemCount,1);
     CHECK_NUM(kvs_put(db,"key1","value1"),SS_SUCCESS);
     CHECK_NUM(kvs_delete(db,"key1"),SS_SUCCESS);
     CHECK_STR(kvs_get(db,"key1"),NULL);
-    CHECK_NUM(kvs_get_count(db),1);
+    CHECK_NUM(db->itemCount,1);
     CHECK_NUM(kvs_delete(db,"key2"),SS_SUCCESS);
     CHECK_STR(kvs_get(db,"key2"),NULL);
-    CHECK_NUM(kvs_get_count(db),0);
+    CHECK_NUM(db->itemCount,0);
     kvs_destroy(db);
 }
 
@@ -65,8 +65,8 @@ void test_resize(){
         sprintf(testValue,"value-%d",i);
         kvs_put(db,testKey,testValue);
     }
-    CHECK_NUM(kvs_get_count(db),100);
-    CHECK_NUM(kvs_get_bucket_count(db),256);
+    CHECK_NUM(db->itemCount,100);
+    CHECK_NUM(db->bucketCount,256);
     kvs_destroy(db);
 }
 

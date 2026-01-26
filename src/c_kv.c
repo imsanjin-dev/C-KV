@@ -4,31 +4,6 @@
 #include "c_kv.h"
 #include "utils.h"
 
-struct KVSNode
-{
-    char* key;
-    char* value;
-    KVSNode* next;
-    KVSNode* lru_prev;  // LRU 双向链表的前驱
-    KVSNode* lru_next;  // LRU 双向链表的后继
-};
-
-struct KVS{
-    KVSNode** buckets;
-    int itemCount;
-    int bucketCount;
-    KVSNode* lruHead;   // 指向最新鲜的数据 (Most Recently Used)
-    KVSNode* lruTail;   // 指向最陈旧的数据 (Least Recently Used)
-    int maxCapacity;    // 允许存储的最大节点数
-};
-
-int kvs_get_count(KVS* kvs){
-    return kvs->itemCount;
-}
-int kvs_get_bucket_count(KVS* kvs){
-    return kvs->bucketCount;
-}
-
 KVS* kvs_create(int maxCapacity){
     KVS* newKVS=(KVS*)malloc(sizeof(KVS));
     if (newKVS==NULL)
