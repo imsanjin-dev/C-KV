@@ -7,7 +7,7 @@
 #include<string.h>
 
 void test_database_init(){
-        KVS* db=kvs_create();
+        KVS* db=kvs_create(0);
         if (db!=NULL)
         {
             CHECK_NUM(kvs_get_count(db),0);
@@ -19,7 +19,7 @@ void test_database_init(){
     }
 
 void test_put_get(){
-    KVS* db=kvs_create();
+    KVS* db=kvs_create(0);
     CHECK_NUM(kvs_put(db,"key1","value1"),SS_SUCCESS);
     CHECK_NUM(kvs_get_count(db),1);
     char* val = kvs_get(db, "key1");
@@ -28,7 +28,7 @@ void test_put_get(){
 }
 
 void test_delete(){
-    KVS* db=kvs_create();
+    KVS* db=kvs_create(0);
     CHECK_NUM(kvs_put(db,"key1","value1"),SS_SUCCESS);
     CHECK_NUM(kvs_put(db,"key2","value2"),SS_SUCCESS);
     CHECK_NUM(kvs_delete(db,"key1"),SS_SUCCESS);
@@ -55,9 +55,8 @@ void test_hash_func(){
     printf("\n%lu,%lu,%lu,%lu\n",h1,h2,h3,h4);
 }
 
-//测试前将TABLE_SIZE改为128，注释掉test_lru_eviction
 void test_resize(){
-    KVS* db=kvs_create();
+    KVS* db=kvs_create(0);
     for (int i = 0; i < 100; i++)
     {
         char testKey[12];
@@ -71,9 +70,8 @@ void test_resize(){
     kvs_destroy(db);
 }
 
-//测试前将maxCapacity改为5,注释掉test_resize
 void test_lru_eviction(){
-    KVS* db=kvs_create();
+    KVS* db=kvs_create(5);
     for (int i = 0; i <=5 ; i++)
     {
         char testKey[12];

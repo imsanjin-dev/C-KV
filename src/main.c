@@ -7,7 +7,7 @@ int main() {
     printf(">> System Initialized.\n");
 
    printf(">> 1. [Init] 初始化数据库...\n");
-    KVS* db = kvs_create();
+    KVS* db = kvs_create(0);
     if (!db) {
         printf("Failed to create DB\n");
         return 1;

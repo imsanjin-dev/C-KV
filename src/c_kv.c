@@ -29,7 +29,7 @@ int kvs_get_bucket_count(KVS* kvs){
     return kvs->bucketCount;
 }
 
-KVS* kvs_create(){
+KVS* kvs_create(int maxCapacity){
     KVS* newKVS=(KVS*)malloc(sizeof(KVS));
     if (newKVS==NULL)
     {
@@ -47,7 +47,7 @@ KVS* kvs_create(){
 
     newKVS->lruHead = NULL;
     newKVS->lruTail = NULL;
-    newKVS->maxCapacity = MAXCAPACITY; // 为了测试方便，可以改限制为 5 个。
+    newKVS->maxCapacity = maxCapacity>0?maxCapacity:100000; 
 
     return newKVS;
 }

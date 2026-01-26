@@ -6,7 +6,7 @@
 #include<string.h>
 
 int main(){
-    KVS* db=kvs_create();
+    KVS* db=kvs_create(0);
     if (db==NULL)
     {
         return 1;
