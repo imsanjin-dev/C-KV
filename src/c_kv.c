@@ -47,7 +47,7 @@ KVS* kvs_create(int maxCapacity){
 
     newKVS->lruHead = NULL;
     newKVS->lruTail = NULL;
-    newKVS->maxCapacity = maxCapacity>0?maxCapacity:100000; 
+    newKVS->maxCapacity = maxCapacity>0?maxCapacity:DEFAULT_CAPACITY; 
 
     return newKVS;
 }
@@ -117,6 +117,7 @@ static void kvs_resize(KVS* kvs,int newSize){
     {
         return;
     }
+    //currentBucket,当前正在复制的Bucket
     KVSNode** currentBucket=kvs->buckets;
     for (int i = 0; i < kvs->bucketCount; i++)
     {

@@ -4,6 +4,7 @@
 #include"common.h"
 
 #define TABLE_SIZE 128
+#define DEFAULT_CAPACITY 100000
 
 typedef struct KVS KVS;
 typedef struct KVSNode KVSNode;
