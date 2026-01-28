@@ -3,6 +3,7 @@
 #include<string.h>
 #include "c_kv.h"
 #include "utils.h"
+#include "bst.h"
 
 KVS* kvs_create(int maxCapacity){
     KVS* newKVS=(KVS*)malloc(sizeof(KVS));
@@ -22,9 +23,15 @@ KVS* kvs_create(int maxCapacity){
 
     newKVS->lruHead = NULL;
     newKVS->lruTail = NULL;
+
+    newKVS->bstRoot = NULL;
+
     newKVS->maxCapacity = maxCapacity>0?maxCapacity:DEFAULT_CAPACITY; 
 
     return newKVS;
+}
+void kvs_save(KVS* kvs){
+    
 }
 void kvs_destroy(KVS* kvs){
     if (kvs==NULL)
@@ -169,10 +176,14 @@ SYS_STATUS kvs_put(KVS* kvs, const char* key, const char* value) {
     newNode->value = newValue;
     newNode->lru_next=NULL;
     newNode->lru_prev=NULL;
+    newNode->bst_left=NULL;
+    newNode->bst_right=NULL;
     newNode->next = kvs->buckets[hKey]; 
     kvs->buckets[hKey]=newNode;
     kvs->itemCount++;
+    bst_insert(kvs,newNode);
     lru_link_node(kvs,newNode);
+
     return SS_SUCCESS;
 }
 char* kvs_get(KVS* kvs,const char* key){
@@ -217,6 +228,7 @@ SYS_STATUS kvs_delete(KVS* kvs,const char* key){
                 pre->next=current->next;
             }
             lru_unlink_node(kvs,current);
+            bst_delete(kvs,current);
             free(current->key);
             free(current->value);
             free(current);
