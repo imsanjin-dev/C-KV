@@ -30,9 +30,6 @@ KVS* kvs_create(int maxCapacity){
 
     return newKVS;
 }
-void kvs_save(KVS* kvs){
-    
-}
 void kvs_destroy(KVS* kvs){
     if (kvs==NULL)
     {
@@ -53,6 +50,101 @@ void kvs_destroy(KVS* kvs){
     }
     free(kvs->buckets);
     free(kvs);
+}
+static void kvs_save_recursive(KVSNode* root, FILE* fp){
+    if (!root)
+    {
+        return;
+    }
+    int keyLen=strlen(root->key);
+    int valLen=strlen(root->value);
+    fwrite(&keyLen,sizeof(int),1,fp);
+    fwrite(root->key,sizeof(char),keyLen,fp);
+    fwrite(&valLen,sizeof(int),1,fp);
+    fwrite(root->value,sizeof(char),valLen,fp);
+    kvs_save_recursive(root->bst_left,fp);
+    kvs_save_recursive(root->bst_right,fp);
+}
+void kvs_save(KVS* kvs, const char* filename){
+    if (kvs==NULL||filename==NULL)
+    {
+        return;
+    }
+    FILE* fp=fopen(filename,"wb");
+    if (fp == NULL) {
+        perror("Failed to open file for save");
+        return;
+    }
+    char magic[4]="CKV1";
+    fwrite(magic,sizeof(char),4,fp);
+    kvs_save_recursive(kvs->bstRoot, fp);
+    fclose(fp);
+    printf(">> DB Saved to '%s' (Format: CKV1)\n", filename);
+}
+void kvs_load(KVS* kvs, const char* filename){
+    if (kvs==NULL||filename==NULL)
+    {
+        return;
+    }
+    FILE* fp=fopen(filename,"rb");
+    if (fp == NULL) {
+        perror("Failed to open file for load");
+        return;
+    }
+    char magic[4];
+    if (fread(magic, sizeof(char), 4, fp) != 4) {
+        printf("File is too short or empty.\n");
+        fclose(fp);
+        return;
+    }
+    if (memcmp(magic, "CKV1", 4) != 0) {
+        printf("Invalid file format. Magic number mismatch.\n");
+        fclose(fp); 
+        return;
+    }
+    while (1)
+    {
+        int keyLen=0;
+        if (fread(&keyLen,sizeof(int),1,fp)!=1)
+        {
+            break;
+        }
+        if (keyLen<0)
+        {
+            break;
+        }
+        char* key=(char*)malloc((keyLen+1)*sizeof(char));
+        if (fread(key,sizeof(char),keyLen,fp)!=keyLen)
+        {
+            free(key);
+            break;
+        }
+        key[keyLen]='\0';
+        int valLen=0;
+        if (fread(&valLen,sizeof(int),1,fp)!=1)
+        {
+            free(key);
+            break;
+        }
+        if (valLen<0)
+        {
+            free(key);
+            break;
+        }
+        char* value=(char*)malloc((valLen+1)*sizeof(char));
+        if (fread(value,sizeof(char),valLen,fp)!=valLen)
+        {
+            free(key);
+            free(value);
+            break;
+        }
+        value[valLen]='\0';
+        kvs_put(kvs,key,value);
+        free(key);
+        free(value);
+    }
+    fclose(fp);
+    return; 
 }
 
 static void lru_unlink_node(KVS* kvs, KVSNode* node){

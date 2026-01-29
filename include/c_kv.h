@@ -3,6 +3,7 @@
 
 #include"common.h"
 
+#define FILE_NAME "data.db"
 #define TABLE_SIZE 128
 #define DEFAULT_CAPACITY 100000
 
@@ -33,8 +34,9 @@ struct KVS{
     |  Key长度  |   Key的内容    |  Value长度 |  Value的内容  | */
 
 KVS* kvs_create(int maxCapacity);
-void kvs_save(KVS* kvs);
 void kvs_destroy(KVS* kvs);
+void kvs_save(KVS* kvs, const char* filename);
+void kvs_load(KVS* kvs, const char* filename);
 
 SYS_STATUS kvs_put(KVS* kvs,const char* key,const char* value);
 char* kvs_get(KVS* kvs,const char* key);

@@ -25,6 +25,7 @@ include_directories(${CMAKE_SOURCE_DIR}/tests) # 让测试代码能找到 framew
 set(CORE_SRC 
     src/c_kv.c
     src/utils.c
+    src/bst.c
 )
 
 # =============================================================================
