@@ -1,6 +1,7 @@
 #include"../include/bst.h"
 #include"../include/c_kv.h"
 #include<string.h>
+#include<stdio.h>
 
 static KVSNode* bst_insert_recursive(KVSNode* currentNode,KVSNode* theNode){
     if (currentNode)

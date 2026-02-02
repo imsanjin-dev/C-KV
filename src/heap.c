@@ -1,5 +1,6 @@
 #include"../include/heap.h"
 #include"../include/utils.h"
+#include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
 
@@ -25,7 +26,6 @@ void heap_destroy(MinHeap* heap){
     {
         return;
     }
-    
     for (int i = 0; i < heap->currentSize; i++)
     {
         free(heap->array[i].key);
@@ -46,13 +46,13 @@ static void move_up(HeapNode* array,int index){
     {
         return;
     }
-    int parenIndex=(index-1)/2;
-    if (array[index].expireTime>=array[parenIndex].expireTime)
+    int parentIndex=(index-1)/2;
+    if (array[index].expireTime>=array[parentIndex].expireTime)
     {
         return;
     }else{
-        swap_nodes(&array[parenIndex],&array[index]);
-        move_up(array,parenIndex);
+        swap_nodes(&array[parentIndex],&array[index]);
+        move_up(array,parentIndex);
     }
 }
 SYS_STATUS heap_insert(MinHeap* heap,const char* key,time_t expireTime){
@@ -80,4 +80,46 @@ SYS_STATUS heap_insert(MinHeap* heap,const char* key,time_t expireTime){
     move_up(heap->array,heap->currentSize);
     heap->currentSize++;
     return SS_SUCCESS;
+}
+static void move_down(MinHeap* heap,int index){
+    if (!heap||index>heap->currentSize-1)
+    {
+        return;
+    }
+    int smallest=index;
+    int left=2*index+1;
+    int right=left+1;
+    if (left<=heap->currentSize-1)
+    {
+        smallest=(heap->array[smallest].expireTime<heap->array[left].expireTime)?smallest:left;
+    }
+    if (right<=heap->currentSize-1)
+    {
+        smallest=(heap->array[smallest].expireTime<heap->array[right].expireTime)?smallest:right;
+    }
+    if (smallest==index)
+    {
+        return;
+    }else{
+        swap_nodes(&heap->array[index],&heap->array[smallest]);
+        move_down(heap,smallest);
+    }
+}
+SYS_STATUS heap_remove_min(MinHeap* heap,char** out_key){
+    if (!heap||heap->currentSize==0||!out_key)
+    {
+        return SS_INVALID_PARAM;
+    }
+    *out_key=heap->array[0].key;
+    swap_nodes(&heap->array[0],&heap->array[heap->currentSize-1]);
+    heap->currentSize--;
+    move_down(heap,0);
+    return SS_SUCCESS;
+}
+HeapNode* heap_get_min(MinHeap* heap){
+    if (!heap||heap->currentSize==0)
+    {
+        return NULL;
+    }
+    return &heap->array[0];
 }

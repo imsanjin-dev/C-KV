@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<time.h>
 #include "c_kv.h"
 #include "utils.h"
 #include "bst.h"
@@ -17,6 +18,13 @@ KVS* kvs_create(int maxCapacity){
         free(newKVS);
         return NULL;
     }
+    MinHeap* newHeap=heap_create(maxCapacity>0?maxCapacity:DEFAULT_CAPACITY);
+    if (newHeap==NULL)
+    {
+        free(newKVS);
+        free(newBuckets);
+        return NULL;
+    }
     newKVS->itemCount=0;
     newKVS->bucketCount=TABLE_SIZE;
     newKVS->buckets=newBuckets;
@@ -25,6 +33,8 @@ KVS* kvs_create(int maxCapacity){
     newKVS->lruTail = NULL;
 
     newKVS->bstRoot = NULL;
+
+    newKVS->minHeap=newHeap;
 
     newKVS->maxCapacity = maxCapacity>0?maxCapacity:DEFAULT_CAPACITY; 
 
@@ -49,6 +59,7 @@ void kvs_destroy(KVS* kvs){
             }
     }
     free(kvs->buckets);
+    heap_destroy(kvs->minHeap);
     free(kvs);
 }
 static void kvs_save_recursive(KVSNode* root, FILE* fp){
@@ -114,7 +125,7 @@ void kvs_load(KVS* kvs, const char* filename){
             break;
         }
         char* key=(char*)malloc((keyLen+1)*sizeof(char));
-        if (fread(key,sizeof(char),keyLen,fp)!=keyLen)
+        if (fread(key,sizeof(char),keyLen,fp)!=(size_t)keyLen)
         {
             free(key);
             break;
@@ -132,7 +143,7 @@ void kvs_load(KVS* kvs, const char* filename){
             break;
         }
         char* value=(char*)malloc((valLen+1)*sizeof(char));
-        if (fread(value,sizeof(char),valLen,fp)!=valLen)
+        if (fread(value,sizeof(char),valLen,fp)!=(size_t)valLen)
         {
             free(key);
             free(value);
@@ -278,11 +289,36 @@ SYS_STATUS kvs_put(KVS* kvs, const char* key, const char* value) {
 
     return SS_SUCCESS;
 }
+static void check_expired_keys(KVS* kvs){
+    if (!kvs||!kvs->minHeap||kvs->minHeap->currentSize==0)
+    {
+        return;
+    }
+    while (1)
+    {
+        HeapNode* node=heap_get_min(kvs->minHeap);
+        if (!node)
+        {
+            return;
+        }
+        time_t now=time(NULL);
+        if (node->expireTime>now)
+        {
+           return;
+        }else{
+            char* keyToDelete = NULL;
+            heap_remove_min(kvs->minHeap, &keyToDelete);
+            kvs_delete(kvs,keyToDelete);
+            free(keyToDelete);
+        }
+    }
+}
 char* kvs_get(KVS* kvs,const char* key){
     if (kvs==NULL||key==NULL)
     {
         return NULL;
     }
+    check_expired_keys(kvs);
 
     unsigned long hKey=hash(key)%kvs->bucketCount;
 
@@ -331,4 +367,18 @@ SYS_STATUS kvs_delete(KVS* kvs,const char* key){
         current=current->next; 
     }
     return SS_KEY_NOT_FOUND;
+}
+SYS_STATUS kvs_put_expire(KVS* kvs, const char* key, const char* value, int ttl_sec){
+    SYS_STATUS status=kvs_put(kvs,key,value);
+    if (status!=SS_SUCCESS)
+    {
+        return status;
+    }
+    status=heap_insert(kvs->minHeap,key,time(NULL)+ttl_sec);
+    if (status!=SS_SUCCESS)
+    {
+        kvs_delete(kvs,key);
+        return status;
+    }
+    return status;
 }

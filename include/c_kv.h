@@ -2,6 +2,7 @@
 #define C_KV_H
 
 #include"common.h"
+#include "heap.h"
 
 #define FILE_NAME "data.db"
 #define TABLE_SIZE 128
@@ -27,6 +28,7 @@ struct KVS{
     KVSNode* lruTail;   // 指向最陈旧的数据 
     int maxCapacity;    // 允许存储的最大节点数
     KVSNode* bstRoot;   // 二叉搜索树根节点
+    MinHeap* minHeap;   // 判断是否过期的最小堆
 };
 
 /*  保存格式
@@ -41,5 +43,7 @@ void kvs_load(KVS* kvs, const char* filename);
 SYS_STATUS kvs_put(KVS* kvs,const char* key,const char* value);
 char* kvs_get(KVS* kvs,const char* key);
 SYS_STATUS kvs_delete(KVS* kvs,const char* key);
+
+SYS_STATUS kvs_put_expire(KVS* kvs, const char* key, const char* value, int ttl_sec);
 
 #endif
