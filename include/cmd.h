@@ -2,11 +2,12 @@
 #define CMD_H
 
 #include"c_kv.h"
+#include"bst.h"
 #include"queue.h"
 #include"stack.h"
 
-#define MAX_INPUT 1024
-#define MAX_ARGS 5
+#define CMD_MAX_INPUT 1024
+#define CMD_MAX_ARGS 5
 
 typedef enum {
     CMD_UNKNOWN = 0,  // 未知命令
@@ -14,7 +15,8 @@ typedef enum {
     CMD_PUT_EXPIRE,   // put_expire命令
     CMD_GET,          // get命令  
     CMD_DEL,          // delete命令
-    CMD_SAVE,         // save命令
+    CMD_KEYS,         // 打印所有 key（BST 中序遍历）
+    CMD_SAVE,         // save命令   
     CMD_LOAD,         // load命令
     CMD_HISTORY,      // 显示历史命令
     CMD_HELP,         // 提示信息

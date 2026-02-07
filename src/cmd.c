@@ -23,6 +23,9 @@ CommandType check_type(char* arg){
     {
         return CMD_DEL;
     }
+    if (strcasecmp(arg,"keys")==0 || strcasecmp(arg,"print_keys")==0){
+        return CMD_KEYS;
+    } 
     if (strcasecmp(arg,"save")==0)
     {
         return CMD_SAVE;
@@ -61,7 +64,7 @@ CommandType parse_input(char* input,char** args,int* arg_count){
         char c=*read;
         if (current_args_start==NULL)
         {
-            if (*arg_count<MAX_ARGS)
+            if (*arg_count<CMD_MAX_ARGS)
             {
                 current_args_start=write;
                 args[*arg_count]=current_args_start;
@@ -160,6 +163,14 @@ CommandType parse_input(char* input,char** args,int* arg_count){
             }
             break;
 
+        
+        case CMD_KEYS:
+            if (*arg_count != 1) { 
+                printf("Usage: keys\n"); 
+                return CMD_UNKNOWN; 
+            }
+            break;
+
         case CMD_SAVE:
             if (*arg_count != 1 && *arg_count != 2) {
                 printf("Usage: save [filename]\n");
@@ -209,8 +220,8 @@ void cmd_main_loop(KVS* db){
     while (running)
     {
         printf("\nCKV>>  ");
-        char input[MAX_INPUT];
-        if (fgets(input,MAX_INPUT,stdin)==NULL)
+        char input[CMD_MAX_INPUT];
+        if (fgets(input,CMD_MAX_INPUT,stdin)==NULL)
         {
             printf("bye!");
             sleep(1);
@@ -227,7 +238,7 @@ void cmd_main_loop(KVS* db){
             printf("Input is not compliant");
             continue;
         }
-        char* args[MAX_ARGS];
+        char* args[CMD_MAX_ARGS];
         int arg_count = 0;
         CommandType cmd=parse_input(input,args,&arg_count); 
         switch (cmd) {
@@ -237,6 +248,7 @@ void cmd_main_loop(KVS* db){
                 printf("  put_expire <key> <value> <ttl>\n");
                 printf("  get <key>\n");
                 printf("  del <key>\n");
+                printf("  keys\n");
                 printf("  save [filename]\n");
                 printf("  load [filename]\n");
                 printf("  history\n");
@@ -272,6 +284,10 @@ void cmd_main_loop(KVS* db){
                 else printf("Error: del failed (%d)\n", st);
                 break;
             }
+            case CMD_KEYS:
+                if (db == NULL || db->bstRoot == NULL) printf("(empty)\n");
+                else bst_print_keys(db->bstRoot);
+                break;
 
             case CMD_SAVE: {
                 const char* filename = (arg_count == 2) ? args[1] : FILE_NAME;
