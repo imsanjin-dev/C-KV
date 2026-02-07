@@ -27,6 +27,9 @@ set(CORE_SRC
     src/utils.c
     src/bst.c
     src/heap.c
+    src/stack.c
+    src/queue.c
+    src/cmd.c
 )
 
 # =============================================================================
