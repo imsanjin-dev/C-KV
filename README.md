@@ -1,4 +1,7 @@
 # C-Super-KV
+![Language](https://img.shields.io/badge/language-C99-blue.svg)
+![Build](https://img.shields.io/badge/build-CMake-green.svg)
+
 一个基于 C 的轻量级内存键值数据库：**Hash + LRU + AVL + Min-Heap** 多结构协同，兼顾 **O(1) 存取 / O(1) 淘汰 / O(log N) 有序 / 高效 TTL**。
 
 > 这是一个用于学习与巩固数据结构/内存管理的 Educational Project，重点在底层实现与一致性维护。
@@ -20,14 +23,21 @@
 
 ```
 
-Hash Table  --->  KVSNode  <---  AVL Tree (按 key 有序)
-|              |  ^
-|              v  |
-+----> LRU Doubly List (head=最近使用, tail=淘汰点)
+[ Hash Table ] (O(1) Access)
+             |
+             v
+      +--------------+
+      |   KVSNode    | <--- [ AVL Tree ] (Range Query / Order)
+      +--------------+
+      | key / value  |
+      | expire_time  |
+      +--------------+
+        ^          ^
+        |          |
+[ LRU List ]    [ Min-Heap ]
+(Eviction)      (TTL Manage)
 
-Min-Heap: 存 (expire_time, keyCopy) 用于 TTL（懒惰删除）
-
-````
+```
 
 ### 一致性为什么关键？
 任何一次 **PUT/DEL/淘汰/过期** 都必须同步更新结构，否则会出现：
@@ -61,7 +71,7 @@ mkdir -p build
 cd build
 cmake ..
 cmake --build .
-````
+```
 
 ### 运行
 
