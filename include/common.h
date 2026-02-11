@@ -2,7 +2,7 @@
 #define COMMON_H
 
 #define PROJECT_NAME "C-KV"
-#define VERSION "0.1"
+#define VERSION "1.0"
 
 void print_banner(void);
 typedef enum {
