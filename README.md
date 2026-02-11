@@ -144,6 +144,6 @@ valgrind --leak-check=full --show-leak-kinds=all ./c-kv
 
 ## License
 
-No license. For learning and reference only.
+MIT
 
 
