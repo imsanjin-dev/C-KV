@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "common.h"  
 #include "c_kv.h"
-#include "bst.h"
+#include "avl.h"
 #include "cmd.h"
 
 int main(void) {

@@ -4,7 +4,26 @@
 #include<time.h>
 #include "c_kv.h"
 #include "utils.h"
-#include "bst.h"
+#include "avl.h"
+
+static KVSNode* kvs_get_expire_node(KVS* kvs,const char* key){
+    if (kvs==NULL||key==NULL)
+    {
+        return NULL;
+    }
+    unsigned long hKey=hash(key)%kvs->bucketCount;
+    KVSNode* current=kvs->buckets[hKey];
+    while (current!=NULL)
+    {
+        if (strcmp(current->key,key)==0)
+        {
+            return current;
+        }
+        current=current->next; 
+    }
+    return NULL;
+}
+
 
 KVS* kvs_create(int maxCapacity){
     KVS* newKVS=(KVS*)malloc(sizeof(KVS));
@@ -32,7 +51,7 @@ KVS* kvs_create(int maxCapacity){
     newKVS->lruHead = NULL;
     newKVS->lruTail = NULL;
 
-    newKVS->bstRoot = NULL;
+    newKVS->avlRoot = NULL;
 
     newKVS->minHeap=newHeap;
 
@@ -67,14 +86,17 @@ static void kvs_save_recursive(KVSNode* root, FILE* fp){
     {
         return;
     }
-    int keyLen=strlen(root->key);
-    int valLen=strlen(root->value);
-    fwrite(&keyLen,sizeof(int),1,fp);
-    fwrite(root->key,sizeof(char),keyLen,fp);
-    fwrite(&valLen,sizeof(int),1,fp);
-    fwrite(root->value,sizeof(char),valLen,fp);
-    kvs_save_recursive(root->bst_left,fp);
-    kvs_save_recursive(root->bst_right,fp);
+    if (root->expire_time==0)
+    {
+        int keyLen=strlen(root->key);
+        int valLen=strlen(root->value);
+        fwrite(&keyLen,sizeof(int),1,fp);
+        fwrite(root->key,sizeof(char),keyLen,fp);
+        fwrite(&valLen,sizeof(int),1,fp);
+        fwrite(root->value,sizeof(char),valLen,fp);
+    }
+    kvs_save_recursive(root->avl_left,fp);
+    kvs_save_recursive(root->avl_right,fp);
 }
 void kvs_save(KVS* kvs, const char* filename){
     if (kvs==NULL||filename==NULL)
@@ -88,7 +110,7 @@ void kvs_save(KVS* kvs, const char* filename){
     }
     char magic[4]="CKV1";
     fwrite(magic,sizeof(char),4,fp);
-    kvs_save_recursive(kvs->bstRoot, fp);
+    kvs_save_recursive(kvs->avlRoot, fp);
     fclose(fp);
     printf(">> DB Saved to '%s' (Format: CKV1)\n", filename);
 }
@@ -242,6 +264,7 @@ SYS_STATUS kvs_put(KVS* kvs, const char* key, const char* value) {
         {
             free(current->value);
             current->value=newValue;
+            current->expire_time=0;
             lru_unlink_node(kvs,current);
             lru_link_node(kvs,current);
             return SS_SUCCESS;
@@ -279,12 +302,14 @@ SYS_STATUS kvs_put(KVS* kvs, const char* key, const char* value) {
     newNode->value = newValue;
     newNode->lru_next=NULL;
     newNode->lru_prev=NULL;
-    newNode->bst_left=NULL;
-    newNode->bst_right=NULL;
+    newNode->avl_left=NULL;
+    newNode->avl_right=NULL;
+    newNode->avl_height=1;
+    newNode->expire_time=0;
     newNode->next = kvs->buckets[hKey]; 
     kvs->buckets[hKey]=newNode;
     kvs->itemCount++;
-    bst_insert(kvs,newNode);
+    avl_insert(kvs,newNode);
     lru_link_node(kvs,newNode);
 
     return SS_SUCCESS;
@@ -302,16 +327,27 @@ static void check_expired_keys(KVS* kvs){
             return;
         }
         time_t now=time(NULL);
+        time_t heap_exp=node->expireTime;
         if (node->expireTime>now)
         {
            return;
         }else{
             char* keyToDelete = NULL;
             heap_remove_min(kvs->minHeap, &keyToDelete);
-            kvs_delete(kvs,keyToDelete);
+            KVSNode* theNode=kvs_get_expire_node(kvs,keyToDelete);
+            if (theNode)
+            {
+                if (theNode->expire_time==heap_exp)
+                {
+                    kvs_delete(kvs,keyToDelete);
+                }
+            }
             free(keyToDelete);
         }
     }
+}
+void kvs_cleanup_expired(KVS* kvs){ 
+    check_expired_keys(kvs); 
 }
 char* kvs_get(KVS* kvs,const char* key){
     if (kvs==NULL||key==NULL)
@@ -356,7 +392,7 @@ SYS_STATUS kvs_delete(KVS* kvs,const char* key){
                 pre->next=current->next;
             }
             lru_unlink_node(kvs,current);
-            bst_delete(kvs,current);
+            avl_delete(kvs,current);
             free(current->key);
             free(current->value);
             free(current);
@@ -368,13 +404,21 @@ SYS_STATUS kvs_delete(KVS* kvs,const char* key){
     }
     return SS_KEY_NOT_FOUND;
 }
+
 SYS_STATUS kvs_put_expire(KVS* kvs, const char* key, const char* value, int ttl_sec){
     SYS_STATUS status=kvs_put(kvs,key,value);
     if (status!=SS_SUCCESS)
     {
         return status;
     }
-    status=heap_insert(kvs->minHeap,key,time(NULL)+ttl_sec);
+    KVSNode* node=kvs_get_expire_node(kvs,key);
+    if (!node)
+    {
+        return SS_KEY_NOT_FOUND;
+    }
+    time_t expire_time=time(NULL)+ttl_sec;
+    node->expire_time=expire_time;
+    status=heap_insert(kvs->minHeap,key,expire_time);
     if (status!=SS_SUCCESS)
     {
         kvs_delete(kvs,key);

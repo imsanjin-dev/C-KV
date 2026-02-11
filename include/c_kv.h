@@ -1,6 +1,7 @@
 #ifndef C_KV_H
 #define C_KV_H
 
+#include<time.h>
 #include"common.h"
 #include "heap.h"
 
@@ -17,8 +18,10 @@ struct KVSNode
     KVSNode* next;
     KVSNode* lru_prev;  // LRU 双向链表的前驱
     KVSNode* lru_next;  // LRU 双向链表的后继 
-    KVSNode* bst_left;  // BST 左子树
-    KVSNode* bst_right; // BST 右子树
+    KVSNode* avl_left;  // AVL 左子树
+    KVSNode* avl_right; // AVL 右子树
+    int avl_height;     // AVL 高度 
+    time_t expire_time; // 过期时间，0代表永久
 };
 struct KVS{
     KVSNode** buckets;
@@ -27,7 +30,7 @@ struct KVS{
     KVSNode* lruHead;   // 指向最新鲜的数据 
     KVSNode* lruTail;   // 指向最陈旧的数据 
     int maxCapacity;    // 允许存储的最大节点数
-    KVSNode* bstRoot;   // 二叉搜索树根节点
+    KVSNode* avlRoot;   // 二叉搜索树根节点
     MinHeap* minHeap;   // 判断是否过期的最小堆
 };
 
@@ -39,6 +42,8 @@ KVS* kvs_create(int maxCapacity);
 void kvs_destroy(KVS* kvs);
 void kvs_save(KVS* kvs, const char* filename);
 void kvs_load(KVS* kvs, const char* filename);
+
+void kvs_cleanup_expired(KVS* kvs);
 
 SYS_STATUS kvs_put(KVS* kvs,const char* key,const char* value);
 char* kvs_get(KVS* kvs,const char* key);

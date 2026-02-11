@@ -2,7 +2,7 @@
 #define CMD_H
 
 #include"c_kv.h"
-#include"bst.h"
+#include"avl.h"
 #include"queue.h"
 #include"stack.h"
 
@@ -15,7 +15,7 @@ typedef enum {
     CMD_PUT_EXPIRE,   // put_expire命令
     CMD_GET,          // get命令  
     CMD_DEL,          // delete命令
-    CMD_KEYS,         // 打印所有 key（BST 中序遍历）
+    CMD_KEYS,         // 打印所有 key（avl 中序遍历）
     CMD_SAVE,         // save命令   
     CMD_LOAD,         // load命令
     CMD_HISTORY,      // 显示历史命令

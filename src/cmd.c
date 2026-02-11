@@ -285,8 +285,17 @@ void cmd_main_loop(KVS* db){
                 break;
             }
             case CMD_KEYS:
-                if (db == NULL || db->bstRoot == NULL) printf("(empty)\n");
-                else bst_print_keys(db->bstRoot);
+                if (db == NULL) {
+                    printf("(empty)\n");
+                    break;
+                }
+                kvs_cleanup_expired(db);
+                if (db->avlRoot == NULL) {
+                    printf("(empty)\n");
+                }
+                else {
+                    avl_print_keys(db->avlRoot);
+                }
                 break;
 
             case CMD_SAVE: {
